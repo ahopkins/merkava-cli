@@ -1,0 +1,22 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[dev-packages]
+
+
+
+[packages]
+
+prompt-toolkit = {git = "https://github.com/jonathanslenders/python-prompt-toolkit.git", ref = "2.0"}
+pygments = "*"
+trio = "*"
+msgpack = "*"
+
+
+[requires]
+
+python_version = "3.6"
