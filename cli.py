@@ -1,9 +1,13 @@
 from prompt_toolkit import prompt
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.contrib.completers import WordCompleter
-import msgpack
+from prompt_toolkit import print_formatted_text as printf, HTML, ANSI
+from pygments import highlight
+from pygments.lexers import JsonLexer
+from pygments.formatters import TerminalFormatter
 import trio
 import sys
+import json
 from time import sleep
 
 
@@ -52,7 +56,8 @@ from time import sleep
 trigger_commands = ['CONNECT', 'STATS',
                     'PUSH', 'RETRIEVE', 'UPDATE', 'RECENT',
                     'DELETE', 'RESTORE', 'PURGE',
-                    'CLEAN', 'FLUSH', 'HELP']
+                    'BACKUP', 'CLEAN', 'FLUSH',
+                    'HELP']
 history = InMemoryHistory()
 completer = WordCompleter([f'{x} ' for x in trigger_commands],
                           ignore_case=True, sentence=True)
@@ -103,13 +108,17 @@ def get_input_prompt(channel):
     return f'{display.upper()}> '
 
 
+def parse_packet(packet):
+    status, message = packet.decode().split(' ', 1)
+
+    try:
+        return status, json.dumps(json.loads(message), indent=4, sort_keys=True), True
+    except json.decoder.JSONDecodeError:
+        return status, message, False
+
+
 async def send(client_stream, command, payload):
-    # msg = msgpack.packb({
-    #     'command': command,
-    #     'channel': channel,
-    #     'payload': payload
-    # })
-    msg = bytes(f'{channel} {command} {payload}', 'utf-8')
+    msg = bytes(f'{channel} {command} {payload}\n', 'utf-8')
     await client_stream.send_all(msg)
 
 
@@ -148,12 +157,20 @@ async def receiver(client_stream):
     while True:
         packet = await client_stream.receive_some(BUFSIZE)
         # data = msgpack.unpackb(packet, use_list=False, raw=False)
-        print(f'\n{packet}\n')
+        status, message, as_json = parse_packet(packet)
+
+        color = "ansigreen" if status == "OK" else "ansired"
+        printf(HTML(f"\n>>\t<{color}><b>{status}</b></{color}>"))
+
+        if as_json:
+            message = highlight(message, JsonLexer(), TerminalFormatter())
+        printf(ANSI('\t' + message.replace("\n", "\n\t")))
+
         await trio.sleep(0.1)
 
 
 async def process():
-    print(f"connecting to {host}:{port}")
+    printf(HTML(f"<ansiwhite>connecting to <b>{host}:{port}</b></ansiwhite>\n"))
     client_stream = await trio.open_tcp_stream(host, port)
     async with client_stream:
         async with trio.open_nursery() as nursery:
@@ -173,14 +190,14 @@ def main():
         #         handle(connection, text)
         trio.run(process)
     except KeyboardInterrupt:
-        print('shutting down')
+        print('\nshutting down')
     except trio.BrokenStreamError:
         print('BrokenStreamError')
         sleep(3)
         print('retrying')
         trio.run(process)
     finally:
-        print('GoodBye!')
+        print('GoodBye!\n')
 
 
 if __name__ == '__main__':
