@@ -11,10 +11,9 @@ name = "pypi"
 
 [packages]
 
-prompt-toolkit = {git = "https://github.com/jonathanslenders/python-prompt-toolkit.git", ref = "2.0"}
-pygments = "*"
+prompt_toolkit = {git = "https://github.com/jonathanslenders/python-prompt-toolkit.git", ref = "2.0"}
+Pygments = "*"
 trio = "*"
-msgpack = "*"
 
 
 [requires]
