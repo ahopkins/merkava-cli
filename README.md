@@ -1,6 +1,6 @@
 # Merkava CLI
 
-This is a CLI for accessing a [https://github.com/ahopkins/merkava](MerkavaDB) instance. Since Merkava is still in active development, so is this utility (although I don't see many changes happening in the near future to the CLI).
+This is a CLI for accessing a (https://github.com/ahopkins/merkava)[MerkavaDB] instance. Since Merkava is still in active development, so is this utility (although I don't see many changes happening in the near future to the CLI).
 
 When Merkava is released, I will push this to PyPI. In the mean time, you can install:
 
